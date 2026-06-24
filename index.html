@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misheck — Financial Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:        #07090E;
+  --bg-card:   #0F131C;
+  --bg-raised: #171C28;
+  --border:    rgba(255,255,255,0.05);
+  --border-hi: rgba(255,255,255,0.12);
+  --text:      #FFFFFF;
+  --muted:     #8E96B7;
+  --dim:       #4B526D;
+  
+  /* Accent Colors matching image_87feac.jpg */
+  --purple:    #8B5CF6;
+  --purple-glow: rgba(139,92,246,0.3);
+  --teal:      #06B6D4;
+  --teal-glow: rgba(6,182,212,0.3);
+  --green:     #10B981;
+  --green-glow: rgba(16,185,129,0.2);
+  --amber:     #F59E0B;
+  --amber-glow: rgba(245,158,11,0.2);
+  --coral:     #EF4444;
+  --pink:      #EC4899;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;padding-bottom:60px;}
+
+/* topbar */
+.topbar{background:rgba(15,19,28,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:60px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.5px;}
+.logo span{background:linear-gradient(90deg, #A78BFA, var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-left:2px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:600;}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.92)}}
+.btn{background:var(--bg-raised);border:1px solid var(--border-hi);color:var(--text);font-size:11px;font-weight:700;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all .2s ease;display:inline-flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:0.3px;}
+.btn:hover{border-color:var(--text);background:rgba(255,255,255,0.04);transform:translateY(-1px);}
+.btn-primary{background:linear-gradient(135deg, var(--purple), #7C3AED);border-color:transparent;box-shadow:0 4px 12px rgba(139,92,246,0.25);}
+.btn-primary:hover{opacity:0.95;box-shadow:0 4px 16px rgba(139,92,246,0.4);}
+
+/* layout */
+.page{max-width:1440px;margin:0 auto;padding:32px 48px 60px;animation:fadeIn 0.5s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.section-label{font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin:32px 0 14px;}
+.section-label:first-child{margin-top:0;}
+
+/* cards */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:22px;position:relative;box-shadow:0 8px 32px rgba(0,0,0,0.2);transition:border-color 0.25s;}
+.card:hover{border-color:rgba(255,255,255,0.12);}
+.card-accent{position:absolute;top:0;left:0;right:0;height:4px;border-radius:12px 12px 0 0;}
+
+/* big bold hero overview */
+.hero-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.hero-card{border-radius:12px;padding:28px;position:relative;overflow:hidden;background:linear-gradient(145deg, #111622, #0A0D15);border:1px solid var(--border);box-shadow:0 12px 40px rgba(0,0,0,0.3);display:flex;flex-direction:column;justify-content:space-between;}
+.hero-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 60%);pointer-events:none;}
+.hero-label{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.hero-value{font-size:48px;font-weight:900;letter-spacing:-1.5px;line-height:1;color:var(--text);margin:6px 0;text-shadow:0 2px 10px rgba(0,0,0,0.5);}
+.hero-value .currency{font-size:24px;font-weight:600;color:var(--purple);margin-right:4px;}
+.hero-sub{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;}
+
+.big-pct{font-size:52px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(90deg, #22D3EE, #06B6D4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;text-shadow:0 4px 12px rgba(6,182,212,0.15);}
+.goal-bar-wrap{background:rgba(255,255,255,0.05);border-radius:6px;height:10px;margin:14px 0 10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);}
+.goal-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg, var(--purple), var(--teal), var(--green));transition:width 1.5s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(6,182,212,0.3);}
+.goal-meta{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.2px;}
+
+/* grids */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.portfolio-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* card headers */
+.card-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-0.2px;}
+.badge{font-size:10px;font-weight:800;padding:4px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:.6px;}
+.badge-purple{background:var(--purple-dim);color:#A78BFA;}
+.badge-teal{background:var(--teal-dim);color:#22D3EE;}
+.badge-green{background:var(--green-dim);color:#34D399;}
+.badge-amber{background:var(--amber-dim);color:#FBBF24;}
+
+/* standard list elements */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);transition:background-color 0.15s;}
+.stat-row:last-of-type{border-bottom:none;padding-bottom:0;}
+.stat-label{font-size:12px;color:var(--muted);font-weight:500;}
+.stat-value{font-size:13px;font-weight:700;color:var(--text);}
+.pos{color:var(--green)!important;}
+.neg{color:var(--coral)!important;}
+.dim{color:var(--muted)!important;font-weight:500!important;}
+.mini-bar-wrap{background:rgba(255,255,255,0.06);border-radius:3px;height:5px;margin-top:12px;overflow:hidden;}
+.mini-bar{height:100%;border-radius:3px;transition:width 1s ease;}
+
+/* spend horizontal track bar */
+.spend-bar{display:flex;height:10px;border-radius:4px;overflow:hidden;gap:2px;margin:14px 0 12px;}
+.spend-seg{height:100%;transition:width .8s ease;}
+.spend-legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:500;}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+
+/* t212 stats overview matrix */
+.t212-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.t212-stat{background:var(--bg-raised);border-radius:8px;padding:12px;border:1px solid var(--border);box-shadow:inset 0 2px 4px rgba(0,0,0,0.15);}
+.t212-stat-label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.t212-stat-value{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-0.3px;}
+
+/* donut component visual mechanics */
+.donut-wrap{display:flex;align-items:center;gap:24px;margin-top:8px;}
+.donut-box{position:relative;width:150px;height:150px;flex-shrink:0;}
+.donut-svg{transform:rotate(-90deg);width:100%;height:100%;}
+.donut-seg{transition:opacity 0.2s ease;cursor:pointer;}
+.donut-seg:hover{opacity:0.8;}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.donut-center-val{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.5px;line-height:1;}
+.donut-center-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;font-weight:700;}
+
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:8px;}
+.donut-legend-item{display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-raised);transition:all .2s ease;}
+.donut-legend-item:hover, .donut-legend-item.active{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);transform:translateX(2px);}
+.donut-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;box-shadow:0 0 6px cubic-bezier(0.4, 0, 0.2, 1);}
+.donut-name{font-size:12px;font-weight:700;color:var(--text);flex:1;}
+.donut-pct{font-size:12px;font-weight:800;text-align:right;}
+.donut-val{font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
+
+/* drilled down position views */
+.positions-panel{animation:slideIn 0.25s ease-out;}
+@keyframes slideIn{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:translateX(0)}}
+.positions-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:6px;border:1px solid var(--border);}
+.positions-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.pos-back{font-size:11px;color:var(--purple);cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
+.pos-back:hover{color:#A78BFA;text-decoration:none;}
+.position-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-raised);border-radius:8px;border:1px solid var(--border);margin-bottom:8px;transition:border-color 0.15s;}
+.position-row:hover{border-color:rgba(255,255,255,0.1);}
+.position-row:last-child{margin-bottom:0;}
+.pos-left{display:flex;align-items:center;gap:12px;}
+.pos-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.pos-ticker{font-size:12px;font-weight:800;color:var(--text);letter-spacing:-0.1px;}
+.pos-name{font-size:11px;color:var(--muted);margin-top:1px;}
+.pos-right{text-align:right;}
+.pos-value{font-size:13px;font-weight:800;color:var(--text);}
+.pos-pnl{font-size:11px;font-weight:700;margin-top:1px;}
+.pos-invested{font-size:10px;color:var(--dim);margin-top:1px;font-weight:600;}
+
+/* system configurations panel */
+.config-panel{background:var(--bg-card);border:1px solid var(--border-hi);border-radius:12px;padding:24px;max-height:0;overflow:hidden;opacity:0;transition:all .4s cubic-bezier(.4,0,.2,1);box-shadow:0 20px 50px rgba(0,0,0,0.4);}
+.config-panel.expanded{max-height:600px;opacity:1;margin-bottom:20px;}
+.config-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;margin-top:16px;}
+.config-field label{display:block;font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.config-field input{width:100%;padding:10px 14px;border:1px solid var(--border-hi);border-radius:6px;font-size:12px;background:var(--bg-raised);color:var(--text);outline:none;transition:border-color 0.15s;}
+.config-field input:focus{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow);}
+.config-note{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.7;background:var(--bg-raised);padding:12px 14px;border-radius:8px;border-left:4px solid var(--purple);}
+
+.loading{color:var(--dim);font-size:12px;font-style:italic;padding:12px 0;}
+.error-msg{color:var(--coral);font-size:12px;font-weight:700;padding:12px 0;}
+
+@media(max-width:950px){
+  .hero-row,.two-col,.portfolio-row,.config-grid{grid-template-columns:1fr;}
+  .donut-wrap{flex-direction:column;align-items:center;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAVIGATION PANEL -->
+<div class="topbar">
+  <div class="logo">Misheck <span>/ Financial Controls</span></div>
+  <div class="topbar-right">
+    <div class="live-badge"><span class="pulse"></span><span id="last-updated">Initial execution...</span></div>
+    <button class="btn" onclick="loadAll()">↻ Sync Grid</button>
+    <button class="btn" id="cfg-btn" onclick="toggleConfig()">⚙ System Settings</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- COLLAPSIBLE CONFIGURATION ENGINE -->
+  <div class="config-panel" id="config-panel">
+    <div style="font-size:14px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">⚙ Enterprise Endpoint Integrations</div>
+    <div class="config-grid">
+      <div class="config-field">
+        <label>Apps Script Production Web App URL</label>
+        <input type="text" id="cfg-script-url" placeholder="https://script.google.com/macros/s/…/exec">
+      </div>
+      <div class="config-field">
+        <label>Milestone Target (ZMW)</label>
+        <input type="number" id="cfg-goal" placeholder="4000000">
+      </div>
+      <div class="config-field">
+        <label>USD → ZMW Spot Conversion Fallback</label>
+        <input type="number" id="cfg-fx" placeholder="17.97">
+      </div>
+    </div>
+    <p class="config-note">Trading 212 API tokens run sandboxed within the Google Apps Script framework tier. Global configurations managed here execute within the local storage layer of this browser runtime engine only.</p>
+    <div style="margin-top:16px;display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="saveConfig()">Commit Preferences</button>
+      <button class="btn" onclick="toggleConfig()">Collapse</button>
+    </div>
+  </div>
+
+  <!-- MACRO OVERVIEW TELEMETRY BLOCK -->
+  <p class="section-label">Core Asset Overview</p>
+  <div class="hero-row">
+    <div class="hero-card">
+      <div class="hero-label">Aggregated Net Worth Position</div>
+      <div class="hero-value"><span class="currency">K</span><span id="nw-number">—</span></div>
+      <div class="hero-sub" id="nw-sub">Awaiting structural balance calculations...</div>
+    </div>
+    <div class="hero-card" style="border-left:4px solid var(--teal); box-shadow: 0 4px 24px var(--teal-glow);">
+      <div class="hero-label">Milestone Progress Target Valuation</div>
+      <div class="big-pct" id="goal-pct">—%</div>
+      <div class="goal-bar-wrap"><div class="goal-bar-fill" id="goal-bar" style="width:0%"></div></div>
+      <div class="goal-meta"><span id="goal-current">K—</span><span id="goal-remaining">K— remaining</span></div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO MATRIX SYSTEMS -->
+  <p class="section-label">Asset Composition & Allocation Matrices</p>
+  <div class="portfolio-row">
+
+    <!-- MACRO COMPOSITION DONUT CONTROL -->
+    <div class="card">
+      <div class="card-accent" style="background:linear-gradient(90deg,var(--purple),var(--teal),var(--amber))"></div>
+      <div class="card-title">
+        Strategic Resource Allocation
+        <span class="badge badge-purple">Composition Sync</span>
+      </div>
+
+      <div class="donut-wrap">
+        <div class="donut-box">
+          <svg class="donut-svg" viewBox="0 0 140 140" id="donut-svg">
+            <!-- segments drawn by JS -->
+          </svg>
+          <div class="donut-center">
+            <div class="donut-center-val" id="donut-center-val">—</div>
+            <div class="donut-center-label" id="donut-center-label">ZMW Asset</div>
+          </div>
+        </div>
+
+        <div class="donut-legend" id="donut-legend">
+          <div class="loading">Slicing data arrays...</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:baseline;">
+        <span style="font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:0.3px;">Gross Dynamic Allocation</span>
+        <span style="font-size:18px;font-weight:900;color:var(--teal);" id="stock-total-zmw">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <span style="font-size:11px;color:var(--dim);font-weight:600;">LuSE Sourced Data Feeds</span>
+        <span style="font-size:11px;color:var(--dim);font-weight:600;" id="luse-updated">—</span>
+      </div>
+    </div>
+
+    <!-- DRILLED DOWN POSITIONS CONTROLLER -->
+    <div class="card">
+      <div class="card-accent" id="drilldown-card-accent" style="background:var(--teal)"></div>
+      <div class="card-title" id="positions-title">
+        Position Level Performance
+        <span class="badge badge-teal" id="positions-badge">Click Asset Block</span>
+      </div>
+
+      <!-- General View State -->
+      <div id="positions-default">
+        <div class="t212-stats">
+          <div class="t212-stat">
+            <div class="t212-stat-label">Platform Valuation</div>
+            <div class="t212-stat-value" id="t212-total">—</div>
+          </div>
+          <div class="t212-stat">
+            <div class="t212-stat-label">Total Gains</div>
+            <div class="t212-stat-value" id="t212-pnl">—</div>
+          </div>
+          <div class="t212-stat">
+            <div class="t212-stat-label">Gross ZMW</div>
+            <div class="t212-stat-value" id="t212-zmw" style="color:var(--teal)">—</div>
+          </div>
+        </div>
+        <div id="group-rows"></div>
+        <div style="margin-top:14px;font-size:11px;color:var(--dim);font-weight:600;text-align:center;background:rgba(255,255,255,0.01);padding:8px;border-radius:6px;border:1px dashed var(--border);">💡 Interactive drill-down enabled: Select a segment row to inspect component metrics.</div>
+      </div>
+
+      <!-- Drilled view context table -->
+      <div id="positions-drilldown" style="display:none;">
+        <div class="positions-panel">
+          <div class="positions-header">
+            <div class="positions-title" id="drilldown-title">Positions Table</div>
+            <span class="pos-back" onclick="closeDrilldown()">← Collapse Filter</span>
+          </div>
+          <div id="positions-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- REAL-TIME LEDGERS & TRACKERS -->
+  <p class="section-label">Real-time Liabilities & Domestic Ledgers</p>
+  <div class="two-col">
+
+    <div class="card">
+      <div class="card-accent" style="background:var(--green); box-shadow: 0 2px 14px var(--green-glow);"></div>
+      <div class="card-title">🧾 Card Expenses & Scanned Receipts <span class="badge badge-green">Domestic Expense</span></div>
+      <div id="receipts-content"><div class="loading">Re-allocating transactional receipts...</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent" style="background:var(--purple); box-shadow: 0 2px 14px var(--purple-glow);"></div>
+      <div class="card-title">📱 Hardware Financing & Premium Installments <span class="badge badge-purple">Amortization</span></div>
+      <div id="phone-content"><div class="loading">Calculating standard premium indices...</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent" style="background:var(--teal); box-shadow: 0 2px 14px var(--teal-glow);"></div>
+      <div class="card-title">🤝 Stokvel Accumulation Pool <span class="badge badge-teal">Liquid Cash Reserves</span></div>
+      <div id="stokvel-content"><div class="loading">Polling system capital statements...</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent" style="background:var(--amber); box-shadow: 0 2px 14px var(--amber-glow);"></div>
+      <div class="card-title">🌍 Nkwashi Plot Escrow Accounts <span class="badge badge-amber">Property Assets</span></div>
+      <div id="nkwashi-content"><div class="loading">Syncing physical equity valuation structures...</div></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ── SYSTEM ARCHITECTURE PARAMETERS ───────────────────────────────────────────
+const CFG_KEY = "misheck_dash_v6";
+function loadConfig(){try{return JSON.parse(localStorage.getItem(CFG_KEY))||{};}catch{return{};}}
+function saveConfig(){
+  const cfg={
+    scriptUrl:document.getElementById("cfg-script-url").value.trim(),
+    goal:parseFloat(document.getElementById("cfg-goal").value)||4000000,
+    fx:parseFloat(document.getElementById("cfg-fx").value)||17.97,
+  };
+  localStorage.setItem(CFG_KEY,JSON.stringify(cfg));
+  toggleConfig();
+  loadAll();
+}
+function prefillConfig(){
+  const cfg=loadConfig();
+  if(cfg.scriptUrl)document.getElementById("cfg-script-url").value=cfg.scriptUrl;
+  if(cfg.goal)document.getElementById("cfg-goal").value=cfg.goal;
+  if(cfg.fx)document.getElementById("cfg-fx").value=cfg.fx;
+}
+function toggleConfig(){
+  const p=document.getElementById("config-panel");
+  p.classList.toggle("expanded");
+}
+
+// ── TELEMETRY SYSTEM CONVERSION FILTERS ───────────────────────────────────────
+const fmtK   = n=>n==null||isNaN(n)?"K 0":"K "+new Intl.NumberFormat("en-ZM",{maximumFractionDigits:0}).format(n);
+const fmtUSD = n=>n==null||isNaN(n)?"$0.00" : "$"+new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+function setEl(id,html){const e=document.getElementById(id);if(e)e.innerHTML=html;}
+function statRow(label,value,cls=""){
+  return `<div class="stat-row"><span class="stat-label">${label}</span><span class="stat-value ${cls}">${value}</span></div>`;
+}
+
+// ── MACRO STRUCTURAL PRESETS ──────────────────────────────────────────────────
+let _data=null;
+const ALLOCATION_COLORS={
+  "International Stocks":  "#8B5CF6", // Purple
+  "Local Stocks":          "#F59E0B", // Amber
+  "Liquid Savings":        "#06B6D4", // Teal
+};
+
+const POSITIONS={
+  "International Stocks":[
+    {ticker:"TSM",  name:"Taiwan Semiconductor", invested:40.35,  exchange:"NYSE"},
+    {ticker:"ASML", name:"ASML Holding",          invested:34.70,  exchange:"Euronext"},
+    {ticker:"NVDA", name:"Nvidia",                invested:26.77,  exchange:"NASDAQ"},
+    {ticker:"IFNNY",name:"Infineon Technologies", invested:19.25,  exchange:"OTC"},
+    {ticker:"EQGB", name:"Invesco EQQQ Nasdaq-100",    invested:74.78, exchange:"LSE"},
+    {ticker:"SMH",  name:"VanEck Semiconductor (Acc)", invested:51.72, exchange:"LSE"},
+    {ticker:"VWRP", name:"Vanguard FTSE All-World",    invested:69.16, exchange:"LSE"},
+    {ticker:"PHAU", name:"WisdomTree Physical Gold",   invested:14.26, exchange:"Euronext"}
+  ],
+  "Local Stocks":[
+    {ticker:"CEC",   name:"Copperbelt Energy Corp", shares:5000, priceZMW:16.84},
+    {ticker:"DOTCM", name:"Dot Com Zambia PLC",         shares:500,  priceZMW:24.60},
+    {ticker:"ATEL",  name:"Airtel Zambia",          shares:6,    priceZMW:175.00}
+  ],
+  "Liquid Savings":[
+    {ticker:"STK-01", name:"Stokvel Principal Accumulation", shares:1, priceZMW:1.00}
+  ]
+};
+
+async function fetchData(){
+  const cfg=loadConfig();
+  if(!cfg.scriptUrl)return null;
+  try{const res=await fetch(cfg.scriptUrl);_data=await res.json();return _data;}
+  catch(e){console.error("Endpoint load dropped: ", e);return null;}
+}
+
+// ── DONUT RENDERING ENGINE ────────────────────────────────────────────────────
+let _donutTotal = 0; // track total for reset
+
+function polarToXY(cx, cy, r, angleDeg) {
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function drawAllocationChart(intlZMW, localZMW, liquidZMW) {
+  const totalZMW = intlZMW + localZMW + liquidZMW;
+  _donutTotal = totalZMW;
+  const svg = document.getElementById("donut-svg");
+  const cx = 70, cy = 70, outerR = 58, innerR = 38;
+  const GAP_DEG = 1.5; // tiny gap between segments in degrees
+
+  svg.querySelectorAll(".donut-seg,.donut-pct-label").forEach(e => e.remove());
+
+  const baskets = [
+    { name: "International Stocks", valueZMW: intlZMW, color: ALLOCATION_COLORS["International Stocks"] },
+    { name: "Local Stocks",         valueZMW: localZMW, color: ALLOCATION_COLORS["Local Stocks"] },
+    { name: "Liquid Savings",       valueZMW: liquidZMW, color: ALLOCATION_COLORS["Liquid Savings"] }
+  ].filter(b => b.valueZMW > 0);
+
+  let startDeg = 0;
+
+  baskets.forEach(basket => {
+    const pct    = totalZMW > 0 ? basket.valueZMW / totalZMW : 0;
+    const sweep  = pct * 360;
+    const s      = startDeg + GAP_DEG / 2;
+    const e      = startDeg + sweep - GAP_DEG / 2;
+    const large  = sweep - GAP_DEG > 180 ? 1 : 0;
+
+    const p1 = polarToXY(cx, cy, outerR, s);
+    const p2 = polarToXY(cx, cy, outerR, e);
+    const p3 = polarToXY(cx, cy, innerR, e);
+    const p4 = polarToXY(cx, cy, innerR, s);
+
+    const d = [
+      `M ${p1.x} ${p1.y}`,
+      `A ${outerR} ${outerR} 0 ${large} 1 ${p2.x} ${p2.y}`,
+      `L ${p3.x} ${p3.y}`,
+      `A ${innerR} ${innerR} 0 ${large} 0 ${p4.x} ${p4.y}`,
+      `Z`
+    ].join(" ");
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    path.setAttribute("fill", basket.color);
+    path.setAttribute("class", "donut-seg");
+    path.style.cursor = "pointer";
+    path.style.transition = "opacity .2s";
+    path.style.opacity = "0.9";
+
+    path.addEventListener("click", () => {
+      openDrilldown(basket.name);
+      setEl("donut-center-val", fmtK(basket.valueZMW).replace("K ", ""));
+      setEl("donut-center-label", basket.name.split(" ")[0]);
+    });
+    path.addEventListener("mouseenter", () => {
+      path.style.opacity = "1";
+      setEl("donut-center-val", fmtK(basket.valueZMW).replace("K ", ""));
+      setEl("donut-center-label", (pct*100).toFixed(0) + "%");
+    });
+    path.addEventListener("mouseleave", () => {
+      path.style.opacity = "0.9";
+      setEl("donut-center-val", fmtK(totalZMW).replace("K ", ""));
+      setEl("donut-center-label", "ZMW Total");
+    });
+
+    svg.appendChild(path);
+
+    startDeg += sweep;
+  });
+
+  setEl("donut-center-val", fmtK(totalZMW).replace("K ", ""));
+  setEl("donut-center-label", "ZMW Total");
+
+  // Legend
+  const legendHtml = baskets.map(basket => {
+    const pctLabel = totalZMW > 0 ? ((basket.valueZMW / totalZMW) * 100).toFixed(1) : "0.0";
+    return `<div class="donut-legend-item" onclick="openDrilldown('${basket.name}'); setEl('donut-center-val', '${fmtK(basket.valueZMW).replace("K ","")}'); setEl('donut-center-label','${basket.name.split(' ')[0]}');">
+      <div class="donut-dot" style="background:${basket.color}; box-shadow:0 0 8px ${basket.color}80;"></div>
+      <div style="flex:1">
+        <div class="donut-name">${basket.name}</div>
+        <div class="donut-val">${fmtK(basket.valueZMW)}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="donut-pct" style="color:${basket.color}">${pctLabel}%</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  setEl("donut-legend", legendHtml);
+  setEl("stock-total-zmw", fmtK(totalZMW));
+}
+
+// ── DRILL DOWN METHOD CONTROLLERS ─────────────────────────────────────────────
+function openDrilldown(basketName){
+  const cfg = loadConfig();
+  const fx = cfg.fx||17.97;
+  const col = ALLOCATION_COLORS[basketName]||"#666";
+  const lines = POSITIONS[basketName]||[];
+  const data = _data?.t212stock;
+
+  setEl("drilldown-title", basketName);
+  const badge = document.getElementById("positions-badge");
+  badge.textContent = basketName;
+  badge.style.background = col + "18";
+  badge.style.color = col;
+  document.getElementById("drilldown-card-accent").style.background = col;
+
+  let html = "";
+
+  if(basketName === "Local Stocks") {
+    lines.forEach(p => {
+      const rowValZMW = p.shares * p.priceZMW;
+      html += `<div class="position-row" style="border-left: 3px solid ${col}">
+        <div class="pos-left">
+          <div class="pos-dot" style="background:${col}"></div>
+          <div>
+            <div class="pos-ticker">${p.ticker}</div>
+            <div class="pos-name">${p.name}</div>
+          </div>
+        </div>
+        <div class="pos-right">
+          <div class="pos-value">${fmtK(rowValZMW)}</div>
+          <div class="pos-invested">${p.shares.toLocaleString()} units mapped @ K${p.priceZMW}</div>
+        </div>
+      </div>`;
+    });
+  } else if (basketName === "Liquid Savings") {
+    const liquidFundZMW = _data?.stokvel?.misheckContributed || 0;
+    html += `<div class="position-row" style="border-left: 3px solid ${col}">
+      <div class="pos-left">
+        <div class="pos-dot" style="background:${col}"></div>
+        <div>
+          <div class="pos-ticker">STK-POOL</div>
+          <div class="pos-name">Stokvel Sourced Liquid Reserve Account</div>
+        </div>
+      </div>
+      <div class="pos-right">
+        <div class="pos-value">${fmtK(liquidFundZMW)}</div>
+        <div class="pos-invested">Direct liquidity cash pool capitalization</div>
+      </div>
+    </div>`;
+  } else {
+    // International processing metrics logic
+    let nextGenTotalZMW = 0, globalGrowthTotalZMW = 0, nextGenPnlUSD = 0, globalGrowthPnlUSD = 0;
+    if (data?.groups) {
+      data.groups.forEach(g => {
+        if(g.name === "Next Gen Builders") { nextGenTotalZMW = g.valueZMW || 0; nextGenPnlUSD = g.pnlUSD || 0; }
+        if(g.name === "Global Growth Core") { globalGrowthTotalZMW = g.valueZMW || 0; globalGrowthPnlUSD = g.pnlUSD || 0; }
+      });
+    }
+    
+    const nextGenList = lines.filter(l => ["TSM","ASML","NVDA","IFNNY"].includes(l.ticker));
+    const globalGrowthList = lines.filter(l => ["EQGB","SMH","VWRP","PHAU"].includes(l.ticker));
+    
+    const processTickerGroup = (subList, subTotalZMW, groupPnlUSD) => {
+      const cumulativeCostUSD = subList.reduce((acc,curr) => acc + curr.invested, 0);
+      subList.forEach(p => {
+        const proportionalShare = cumulativeCostUSD > 0 ? (p.invested / cumulativeCostUSD) : 0;
+        const assignedValueZMW = subTotalZMW * proportionalShare;
+        const positionPnlUSD = groupPnlUSD * proportionalShare;
+        
+        html += `<div class="position-row" style="border-left: 3px solid ${col}">
+          <div class="pos-left">
+            <div class="pos-dot" style="background:${col}"></div>
+            <div>
+              <div class="pos-ticker">${p.ticker}</div>
+              <div class="pos-name">${p.name} · ${p.exchange}</div>
+            </div>
+          </div>
+          <div class="pos-right">
+            <div class="pos-value">${fmtK(assignedValueZMW)}</div>
+            <div class="pos-pnl ${positionPnlUSD >= 0 ? 'pos' : 'neg'}">${positionPnlUSD >= 0 ? '+' : ''}${fmtUSD(positionPnlUSD)}</div>
+            <div class="pos-invested">Base Principal cost: ${fmtUSD(p.invested)}</div>
+          </div>
+        </div>`;
+      });
+    };
+
+    processTickerGroup(nextGenList, nextGenTotalZMW, nextGenPnlUSD);
+    processTickerGroup(globalGrowthList, globalGrowthTotalZMW, globalGrowthPnlUSD);
+  }
+
+  setEl("positions-list", html);
+  document.getElementById("positions-default").style.display = "none";
+  document.getElementById("positions-drilldown").style.display = "block";
+
+  document.querySelectorAll(".donut-legend-item").forEach(el => {
+    el.classList.toggle("active", el.querySelector(".donut-name")?.textContent === basketName);
+  });
+}
+
+function closeDrilldown(){
+  document.getElementById("positions-default").style.display = "block";
+  document.getElementById("positions-drilldown").style.display = "none";
+  const badge = document.getElementById("positions-badge");
+  badge.textContent = "Click Asset Block";
+  badge.style.background = "var(--teal-dim)";
+  badge.style.color = "#22D3EE";
+  document.getElementById("drilldown-card-accent").style.background = "var(--teal)";
+  document.querySelectorAll(".donut-legend-item").forEach(el => el.classList.remove("active"));
+  setEl("donut-center-val", fmtK(_donutTotal).replace("K ", ""));
+  setEl("donut-center-label", "ZMW Total");
+}
+
+// ── SUBMODULE DATA BINDING ENGINES ───────────────────────────────────────────
+async function loadPortfolioPlatformSummaries(){
+  const data = _data?.t212stock;
+  if(!data || data.status === "error") {
+    setEl("group-rows", `<div class="error-msg">❌ Framework configuration missing or failed.</div>`);
+    return { intl: 0, local: 0 };
+  }
+
+  setEl("t212-total", fmtUSD(data.totalUSD || 0));
+  const sign = (data.totalPnlUSD || 0) >= 0 ? "+" : "";
+  setEl("t212-pnl", `<span class="${(data.totalPnlUSD || 0) >= 0 ? 'pos' : 'neg'}">${sign}${fmtUSD(data.totalPnlUSD || 0)} (${sign}${(data.pnlPct || 0).toFixed(1)}%)</span>`);
+  setEl("t212-zmw", fmtK(data.totalZMW || 0));
+  setEl("luse-updated", data.luseUpdated || "—");
+
+  let internationalZMW = 0, localZMW = 0;
+  
+  const groupRowsHtml = (data.groups || []).map(g => {
+    if(g.name === "Next Gen Builders" || g.name === "Global Growth Core") internationalZMW += g.valueZMW || 0;
+    if(g.name === "LUSE") localZMW += g.valueZMW || 0;
+
+    const segmentAccentColor = g.name === "LUSE" ? ALLOCATION_COLORS["Local Stocks"] : ALLOCATION_COLORS["International Stocks"];
+    return `<div class="stat-row">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:8px;height:8px;border-radius:2px;background:${segmentAccentColor};"></div>
+        <span class="stat-label" style="font-weight:600; color:#FFF;">${g.name}</span>
+      </div>
+      <div style="text-align:right;">
+        <div class="stat-value">${fmtUSD(g.valueUSD)}</div>
+        <div style="font-size:10px;color:var(--muted);">${fmtK(g.valueZMW)}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  setEl("group-rows", groupRowsHtml);
+  return { intl: internationalZMW, local: localZMW };
+}
+
+async function loadReceipts(){
+  const data = _data?.receipts;
+  if(!data||data.status==="error"){setEl("receipts-content",`<div class="error-msg">❌ Accounts ledger mapping failure.</div>`);return 0;}
+  const catColors={Groceries:"#10B981",Fuel:"#F59E0B",Dining:"#3B82F6",Health:"#06B6D4",Household:"#8B5CF6",Other:"#8E95AF"};
+  const monthTotal=data.monthTotal||0;
+  const cats=Object.entries(data.categories||{}).filter(([,v])=>v>0);
+  const barSegs=monthTotal>0?cats.map(([cat,val])=>`<div class="spend-seg" style="width:${(val/monthTotal*100).toFixed(1)}%;background:${catColors[cat]||"#8E95AF"}"></div>`).join(""):"";
+  const legend=cats.map(([cat,val])=>`<div class="legend-item"><div class="legend-dot" style="background:${catColors[cat]||"#8E95AF"}"></div>${cat}: K${val.toFixed(0)}</div>`).join("");
+  const rows=cats.map(([cat,val])=>statRow(cat,`K ${val.toFixed(2)}`)).join("")
+    +statRow("Gross Spend Accumulation",`K ${monthTotal.toFixed(2)}`,"pos")
+    +statRow("Total Logged Physical Receipts",data.receiptCount||0,"dim");
+  setEl("receipts-content",rows+(cats.length>0?`<div class="spend-bar">${barSegs}</div><div class="spend-legend">${legend}</div>`:""));
+  return monthTotal;
+}
+
+async function loadPhone(){
+  const data=_data?.phone;
+  if(!data||data.status==="error"){setEl("phone-content",`<div class="error-msg">❌ Data pipeline dropped.</div>`);return 0;}
+  const pct=data.totalCostUSD>0?(data.totalPaidUSD/data.totalCostUSD)*100:0;
+  setEl("phone-content",
+    statRow("Contract Value Principal",`$${(data.totalCostUSD||0).toFixed(2)}`)
+    +statRow("Amortized Payments",`$${(data.totalPaidUSD||0).toFixed(2)} / K${(data.totalZMW||0).toFixed(0)}`,"pos")
+    +statRow("Unsettled Principal",`$${(data.remainingUSD||0).toFixed(2)}`,"neg")
+    +statRow("Standard Premium Due",`$${(data.monthlyUSD||0).toFixed(2)}`)
+    +`<div class="mini-bar-wrap"><div class="mini-bar" style="width:${pct.toFixed(1)}%;background:var(--purple)"></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:600;">${pct.toFixed(0)}% Discharged · ${data.paymentsRemaining||0} Amortization Waves Remaining</div>`
+  );
+  const cfg=loadConfig();
+  return(data.totalPaidUSD||0)*(cfg.fx||17.97);
+}
+
+async function loadStokvel(){
+  const data=_data?.stokvel;
+  if(!data||data.status==="error"){setEl("stokvel-content",`<div class="error-msg">❌ Savings pool interface dropped.</div>`);return 0;}
+  const pct=data.misheckTarget>0?(data.misheckContributed/data.misheckTarget)*100:0;
+  setEl("stokvel-content",
+    statRow("My Contributed Capital",`K ${(data.misheckContributed||0).toFixed(0)}`,"pos")
+    +statRow("Assigned Target Target Value",`K ${(data.misheckTarget||0).toFixed(0)}`)
+    +statRow("Outstanding Contribution Space",`K ${(data.misheckRemaining||0).toFixed(0)}`,"neg")
+    +statRow("System Capital Pool Balance",`K ${(data.totalPool||0).toFixed(0)}`)
+    +`<div class="mini-bar-wrap"><div class="mini-bar" style="width:${pct.toFixed(1)}%;background:var(--teal)"></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:600;">${pct.toFixed(0)}% of Target Balance Positions Realized</div>`
+  );
+  return data.misheckContributed||0;
+}
+
+async function loadNkwashi(){
+  const data=_data?.nkwashi;
+  if(!data||data.status==="error"){setEl("nkwashi-content",`<div class="error-msg">❌ Infrastructure records missing.</div>`);return 0;}
+  setEl("nkwashi-content",
+    statRow("Asset Appraised Value",`K ${(data.plotPrice||0).toLocaleString()}`)
+    +statRow("Principal Escrow Capital Paid",`K ${(data.totalPaid||0).toLocaleString()}`,"pos")
+    +statRow("Outstanding Escrow Balance",`K ${(data.balanceDue||0).toLocaleString()}`,"neg")
+    +`<div class="mini-bar-wrap"><div class="mini-bar" style="width:${data.pct||0}%;background:var(--amber)"></div></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:600;">${data.pct||0}% Escrow Values Verified · Leopards Hill Infrastructure Dev</div>`
+  );
+  return data.totalPaid||0;
+}
+
+// ── MASTER BALANCING CONTROL GRID ─────────────────────────────────────────────
+async function loadAll(){
+  setEl("last-updated","Refreshing system tables…");
+  await fetchData();
+
+  // Load contextual sub-framework blocks
+  const [receipts, phonePaid, liquidSavingsZMW, nkwashiPaid] = await Promise.all([
+    loadReceipts(), loadPhone(), loadStokvel(), loadNkwashi()
+  ]);
+
+  // Handle asset grouping allocations calculation layers
+  const platformValues = await loadPortfolioPlatformSummaries();
+  
+  // Render Allocation Mechanics Donut Engine Charts
+  drawAllocationChart(platformValues.intl, platformValues.local, liquidSavingsZMW);
+  closeDrilldown();
+
+  // Aggregate high-impact telemetry milestones
+  const cfg = loadConfig();
+  const goal = cfg.goal || 4000000;
+  const netWorth = platformValues.intl + platformValues.local + liquidSavingsZMW + nkwashiPaid;
+  const pct = Math.min((netWorth / goal) * 100, 100);
+
+  setEl("nw-number", new Intl.NumberFormat("en-ZM",{maximumFractionDigits:0}).format(netWorth));
+  setEl("nw-sub", `Intl Markets: ${fmtK(platformValues.intl)} · LuSE Equity: ${fmtK(platformValues.local)} · Escrow Lands: ${fmtK(nkwashiPaid)} · Cash Pools: ${fmtK(liquidSavingsZMW)}`);
+  setEl("goal-pct", pct.toFixed(2) + "%");
+  setEl("goal-current", fmtK(netWorth));
+  setEl("goal-remaining", fmtK(goal - netWorth) + " remaining to milestone");
+  
+  const bar = document.getElementById("goal-bar");
+  if(bar) bar.style.width = pct.toFixed(2) + "%";
+
+  const now = new Date();
+  setEl("last-updated", `Active Feed · Sync ${now.toLocaleTimeString("en-ZM",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}`);
+}
+
+prefillConfig();
+loadAll();
+setInterval(loadAll, 5*60*1000);
+</script>
+</body>
+</html>
