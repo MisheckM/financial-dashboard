@@ -31,7 +31,8 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;padding-bottom:60px;}
 
 /* topbar */
-.topbar{background:rgba(15,19,28,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:60px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar{background:rgba(15,19,28,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:60px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:100;transition:transform .3s ease;}
+.topbar.hidden{transform:translateY(-100%);}
 .logo{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.5px;}
 .logo span{background:linear-gradient(90deg, #A78BFA, var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-left:2px;}
 .topbar-right{display:flex;align-items:center;gap:12px;}
@@ -42,9 +43,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .btn:hover{border-color:var(--text);background:rgba(255,255,255,0.04);transform:translateY(-1px);}
 .btn-primary{background:linear-gradient(135deg, var(--purple), #7C3AED);border-color:transparent;box-shadow:0 4px 12px rgba(139,92,246,0.25);}
 .btn-primary:hover{opacity:0.95;box-shadow:0 4px 16px rgba(139,92,246,0.4);}
+.btn-label{display:inline;}
 
 /* layout */
-.page{max-width:1440px;margin:0 auto;padding:32px 48px 60px;animation:fadeIn 0.5s ease-out;}
+.page{max-width:1440px;margin:0 auto;padding:88px 48px 60px;animation:fadeIn 0.5s ease-out;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .section-label{font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin:32px 0 14px;}
 .section-label:first-child{margin-top:0;}
@@ -156,18 +158,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @media(max-width:950px){
   .hero-row,.two-col,.portfolio-row,.config-grid{grid-template-columns:1fr;}
   .donut-wrap{flex-direction:column;align-items:center;text-align:center;}
+  .page{padding:80px 16px 60px;}
+  .btn-label{display:none;}
+  .btn{padding:8px 10px;font-size:13px;}
+  .live-badge span:last-child{display:none;}
+  .logo{font-size:14px;}
 }
 </style>
 </head>
 <body>
 
 <!-- TOP NAVIGATION PANEL -->
-<div class="topbar">
+<div class="topbar" id="topbar">
   <div class="logo">Misheck <span>/ Financial Controls</span></div>
   <div class="topbar-right">
-    <div class="live-badge"><span class="pulse"></span><span id="last-updated">Initial execution...</span></div>
-    <button class="btn" onclick="loadAll()">↻ Sync Grid</button>
-    <button class="btn" id="cfg-btn" onclick="toggleConfig()">⚙ System Settings</button>
+    <div class="live-badge"><span class="pulse"></span><span id="last-updated">Loading…</span></div>
+    <button class="btn" onclick="loadAll()">↻ <span class="btn-label">Sync</span></button>
+    <button class="btn" id="cfg-btn" onclick="toggleConfig()">⚙ <span class="btn-label">Settings</span></button>
   </div>
 </div>
 
@@ -737,6 +744,23 @@ async function loadAll(){
 prefillConfig();
 loadAll();
 setInterval(loadAll, 5*60*1000);
+
+// ── AUTO-HIDE TOPBAR ON SCROLL ────────────────────────────────────────────────
+let lastScrollY = 0;
+let scrollTimer = null;
+window.addEventListener("scroll", () => {
+  const topbar   = document.getElementById("topbar");
+  const current  = window.scrollY;
+  if (current > lastScrollY && current > 80) {
+    topbar.classList.add("hidden");    // scrolling down — hide
+  } else {
+    topbar.classList.remove("hidden"); // scrolling up — show
+  }
+  lastScrollY = current;
+  // Always show topbar after user stops scrolling for 2s
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(() => topbar.classList.remove("hidden"), 2000);
+}, { passive: true });
 </script>
 </body>
 </html>
